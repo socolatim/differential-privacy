@@ -18,10 +18,11 @@
 #define DIFFERENTIAL_PRIVACY_TESTING_SEQUENCE_H_
 
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
-#include "base/logging.h"
+#include "absl/log/check.h"
 #include "absl/memory/memory.h"
 #include "absl/random/distributions.h"
 

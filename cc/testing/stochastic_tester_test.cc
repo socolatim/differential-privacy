@@ -283,7 +283,7 @@ TEST(StochasticTesterTest, MultipleDatasetBoundedSumTest) {
           .Build();
   ASSERT_TRUE(algorithm.ok());
   StochasticTester<double, int64_t> tester(std::move(*algorithm),
-                                         std::move(sequence));
+                                           std::move(sequence));
   EXPECT_TRUE(tester.Run());
 }
 
@@ -319,7 +319,10 @@ TEST(StochasticTesterTest, ErrorStatusWithoutDP) {
   auto sequence = std::make_unique<HaltonSequence<int64_t>>(
       DefaultDatasetSize(), /*sorted_only=*/true, DefaultDataScale(),
       DefaultDataOffset());
-  auto mechanism = LaplaceMechanism::Builder().SetEpsilon(epsilon).Build();
+  auto mechanism = LaplaceMechanism::Builder()
+                       .SetL1Sensitivity(1)
+                       .SetEpsilon(epsilon)
+                       .Build();
   ASSERT_TRUE(mechanism.ok());
   auto algorithm =
       std::make_unique<CountNoDpError<int64_t>>(epsilon, std::move(*mechanism));

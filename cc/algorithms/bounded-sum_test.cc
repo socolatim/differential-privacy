@@ -20,17 +20,20 @@
 #include <cstdlib>
 #include <limits>
 #include <memory>
+#include <vector>
 
 #include "base/testing/proto_matchers.h"
 #include "base/testing/status_matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "algorithms/algorithm.h"
 #include "algorithms/approx-bounds.h"
 #include "algorithms/numerical-mechanisms-testing.h"
 #include "algorithms/numerical-mechanisms.h"
 #include "proto/util.h"
+#include "proto/data.pb.h"
 
 namespace differential_privacy {
 namespace {
@@ -65,7 +68,7 @@ TYPED_TEST(BoundedSumTest, BasicIO) {
   auto bs =
       typename BoundedSum<TypeParam>::Builder()
           .SetLaplaceMechanism(std::make_unique<ZeroNoiseMechanism::Builder>())
-          .SetEpsilon(1.0)
+          .SetEpsilon(kDefaultEpsilon)
           .SetLower(0)
           .SetUpper(10)
           .Build();
@@ -191,7 +194,7 @@ TYPED_TEST(BoundedSumTest, RepeatedResultsTest) {
   EXPECT_EQ(GetValue<TypeParam>(*output1), GetValue<TypeParam>(*output2));
 }
 
-TYPED_TEST(BoundedSumTest, BuildWithMoreApproxBoundsEpsilonThanApsilonFails) {
+TYPED_TEST(BoundedSumTest, BuildWithMoreApproxBoundsEpsilonThanEpsilonFails) {
   auto bounds = typename ApproxBounds<TypeParam>::Builder()
                     .SetEpsilon(kDefaultEpsilon)
                     .Build();
@@ -246,14 +249,6 @@ TEST(BoundedSumTest, ConfidenceIntervalWithLaplaceTest) {
   auto result = (*bs)->PartialResult();
   ASSERT_OK(result);
   EXPECT_THAT(GetNoiseConfidenceInterval(*result),
-              EqualsProto(wantConfidenceInterval));
-
-  // Although the ErrorReport.noise_confidence_interval is deprecated, we still
-  // keep it updated for a more seamless transition for existing clients. After
-  // some time, we should no longer use ErrorReport.noise_confidence_interval.
-  // But for now, test to make sure ErrorReport.noise_confidence_interval is
-  // being set.
-  EXPECT_THAT((*result).error_report().noise_confidence_interval(),
               EqualsProto(wantConfidenceInterval));
 }
 
@@ -421,7 +416,7 @@ TYPED_TEST(BoundedSumTest, SerializeMergePartialSumsTest) {
   Summary summary = (*bs1)->Serialize();
   (*bs1)->AddEntry(6);
 
-  // Merge summary into second BoundedVariance.
+  // Merge summary into second BoundedSum.
   auto bounds2 = bounds_builder.Build();
   ASSERT_OK(bounds2);
   auto bs2 = builder.SetApproxBounds(std::move(*bounds2)).Build();
@@ -625,7 +620,7 @@ TYPED_TEST(BoundedSumTest, PropagateApproxBoundsError) {
   EXPECT_FALSE((*bs)->PartialResult().ok());
 }
 
-// Test when 0 is in [lower, upper].
+// Test when 0 is in [lower, upper] with ApproxBounds.
 TYPED_TEST(BoundedSumTest, AutomaticBoundsContainZero) {
   std::vector<TypeParam> a = {0,
                               0,

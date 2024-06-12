@@ -113,11 +113,6 @@ Output MakeOutput(const T& value,
                   const ConfidenceInterval& noise_confidence_interval) {
   Output i;
   AddToOutput(&i, value, noise_confidence_interval);
-  // Although the ErrorReport.noise_confidence_interval is deprecated, we still
-  // keep it updated for a more seamless transition for existing clients. After
-  // some time, we should no longer use ErrorReport.noise_confidence_interval.
-  *(i.mutable_error_report()->mutable_noise_confidence_interval()) =
-      noise_confidence_interval;
   return i;
 }
 
@@ -132,13 +127,8 @@ void AddToOutput(Output* output, const T& value,
                  const ConfidenceInterval& noise_confidence_interval) {
   Output_Element* element = output->add_elements();
   SetValue(element->mutable_value(), value);
-  // Use the copy constructor here since operator= (or CopyFrom) would use an
-  // uninitialized value, perhaps as ConfidenceInterval is a proto3 message
-  // inside a proto2 message.
-  ConfidenceInterval* ci_copy =
-      new ConfidenceInterval(noise_confidence_interval);
-  // Transfers ownership of ci_copy to element.
-  element->set_allocated_noise_confidence_interval(ci_copy);
+  element->mutable_noise_confidence_interval()->CopyFrom(
+      noise_confidence_interval);
 }
 
 }  // namespace differential_privacy

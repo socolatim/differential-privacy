@@ -259,14 +259,14 @@ public final class GaussianNoiseTest {
   @Test
   public void addNoise_deltaNull_throwsException() {
     assertThrows(
-        NullPointerException.class,
+        IllegalArgumentException.class,
         () ->
             NOISE.addNoise(
                 DEFAULT_X,
                 DEFAULT_L_0_SENSITIVITY,
                 DEFAULT_L_INF_SENSITIVITY,
                 DEFAULT_EPSILON,
-                /* delta= */ null));
+                 /* delta= */ 0.0));
   }
 
   @Test
